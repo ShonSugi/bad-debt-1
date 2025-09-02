@@ -1,0 +1,13 @@
+Product,Price,Quantity,Revenue,Category
+Laptop,999.99,5,4999.95,Electronics
+Mouse,29.99,12,359.88,Electronics
+Keyboard,79.99,8,639.92,Electronics
+Monitor,299.99,3,899.97,Electronics
+Headphones,149.99,7,1049.93,Electronics
+Desk Chair,199.99,4,799.96,Furniture
+Desk,349.99,2,699.98,Furniture
+Bookshelf,129.99,6,779.94,Furniture
+Coffee Mug,12.99,25,324.75,Office Supplies
+Notebook,4.99,50,249.50,Office Supplies
+Pen Set,19.99,15,299.85,Office Supplies
+Calculator,24.99,10,249.90,Office Supplies
