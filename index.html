@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Column Sum Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .csv-section {
+            background: #f8fafc;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .csv-section:hover {
+            border-color: #4f46e5;
+            background: #f1f5f9;
+        }
+
+        .csv-section.dragover {
+            border-color: #4f46e5;
+            background: #eef2ff;
+            transform: scale(1.02);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-button {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .file-info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e0f2fe;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .column-selector {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .column-selector.show {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group select:focus {
+            outline: none;
+            border-color: #4f46e5;
+        }
+
+        .calculate-button {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .calculate-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .calculate-button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .results {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-radius: 12px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f59e0b;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #92400e;
+        }
+
+        .result-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #78350f;
+        }
+
+        .csv-preview {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
+        .csv-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9em;
+        }
+
+        .csv-table th,
+        .csv-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .csv-table th {
+            background: #f9fafb;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        .csv-table tr:hover {
+            background: #f9fafb;
+        }
+
+        .extension-note {
+            margin-top: 30px;
+            padding: 20px;
+            background: #ede9fe;
+            border-left: 4px solid #8b5cf6;
+            border-radius: 8px;
+        }
+
+        .extension-note h3 {
+            color: #6d28d9;
+            margin-bottom: 10px;
+        }
+
+        .extension-note p {
+            color: #7c3aed;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>CSV Column Sum Calculator</h1>
+            <p>Upload your CSV file and calculate column totals - designed for easy extension</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="csv-section" id="csvSection">
+                <h3>Upload CSV File</h3>
+                <p>Drag and drop your CSV file here or click to browse</p>
+                
+                <div class="file-input-wrapper">
+                    <input type="file" id="csvFile" class="file-input" accept=".csv" />
+                    <button class="file-input-button">Choose CSV File</button>
+                </div>
+                
+                <div class="file-info" id="fileInfo">
+                    <strong>File loaded:</strong> <span id="fileName"></span><br>
+                    <strong>Rows:</strong> <span id="rowCount"></span> | 
+                    <strong>Columns:</strong> <span id="columnCount"></span>
+                </div>
+            </div>
+
+            <div class="column-selector" id="columnSelector">
+                <div class="form-group">
+                    <label for="columnSelect">Select Column to Sum:</label>
+                    <select id="columnSelect">
+                        <option value="">Choose a column...</option>
+                    </select>
+                </div>
+                
+                <button class="calculate-button" id="calculateButton" disabled>Calculate Sum</button>
+            </div>
+
+            <div class="results" id="results">
+                <h3>Results</h3>
+                <div class="result-item">
+                    <span class="result-label">Column:</span>
+                    <span class="result-value" id="resultColumn">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Sum:</span>
+                    <span class="result-value" id="resultSum">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Valid Numbers:</span>
+                    <span class="result-value" id="resultValidCount">-</span>
+                </div>
+                <div class="result-item">
+                    <span class="result-label">Invalid/Empty Values:</span>
+                    <span class="result-value" id="resultInvalidCount">-</span>
+                </div>
+            </div>
+
+            <div class="csv-preview" id="csvPreview" style="display: none;">
+                <table class="csv-table" id="csvTable">
+                    <thead id="csvTableHead"></thead>
+                    <tbody id="csvTableBody"></tbody>
+                </table>
+            </div>
+
+            <div class="extension-note">
+                <h3>🚀 Ready for Extension</h3>
+                <p>This tool is designed as a starting point for CSV comparisons. The code structure makes it easy to add features like multiple file uploads, column comparisons, data visualization, and statistical analysis.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let csvData = [];
+        let csvHeaders = [];
+
+        // File input handling
+        const csvFile = document.getElementById('csvFile');
+        const csvSection = document.getElementById('csvSection');
+        const fileInfo = document.getElementById('fileInfo');
+        const columnSelector = document.getElementById('columnSelector');
+        const columnSelect = document.getElementById('columnSelect');
+        const calculateButton = document.getElementById('calculateButton');
+        const results = document.getElementById('results');
+        const csvPreview = document.getElementById('csvPreview');
+
+        // Drag and drop functionality
+        csvSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            csvSection.classList.add('dragover');
+        });
+
+        csvSection.addEventListener('dragleave', () => {
+            csvSection.classList.remove('dragover');
+        });
+
+        csvSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            csvSection.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type === 'text/csv') {
+                handleFile(files[0]);
+            }
+        });
+
+        csvFile.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const csv = e.target.result;
+                parseCSV(csv);
+                
+                // Show file info
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('rowCount').textContent = csvData.length;
+                document.getElementById('columnCount').textContent = csvHeaders.length;
+                fileInfo.classList.add('show');
+                
+                // Show column selector
+                populateColumnSelect();
+                columnSelector.classList.add('show');
+                
+                // Show preview
+                showCSVPreview();
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(csv) {
+            const lines = csv.split('\n').filter(line => line.trim() !== '');
+            csvHeaders = lines[0].split(',').map(header => header.trim().replace(/"/g, ''));
+            csvData = [];
+            
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(value => value.trim().replace(/"/g, ''));
+                if (values.length === csvHeaders.length) {
+                    csvData.push(values);
+                }
+            }
+        }
+
+        function populateColumnSelect() {
+            columnSelect.innerHTML = '<option value="">Choose a column...</option>';
+            csvHeaders.forEach((header, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = header;
+                columnSelect.appendChild(option);
+            });
+        }
+
+        function showCSVPreview() {
+            const thead = document.getElementById('csvTableHead');
+            const tbody = document.getElementById('csvTableBody');
+            
+            // Clear previous content
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+            
+            // Create header row
+            const headerRow = document.createElement('tr');
+            csvHeaders.forEach(header => {
+                const th = document.createElement('th');
+                th.textContent = header;
+                headerRow.appendChild(th);
+            });
+            thead.appendChild(headerRow);
+            
+            // Create data rows (show first 10 rows)
+            const previewData = csvData.slice(0, 10);
+            previewData.forEach(row => {
+                const tr = document.createElement('tr');
+                row.forEach(cell => {
+                    const td = document.createElement('td');
+                    td.textContent = cell;
+                    tr.appendChild(td);
+                });
+                tbody.appendChild(tr);
+            });
+            
+            csvPreview.style.display = 'block';
+        }
+
+        columnSelect.addEventListener('change', () => {
+            calculateButton.disabled = columnSelect.value === '';
+        });
+
+        calculateButton.addEventListener('click', () => {
+            const columnIndex = parseInt(columnSelect.value);
+            const columnName = csvHeaders[columnIndex];
+            
+            let sum = 0;
+            let validCount = 0;
+            let invalidCount = 0;
+            
+            csvData.forEach(row => {
+                const value = row[columnIndex];
+                const numValue = parseFloat(value);
+                
+                if (!isNaN(numValue) && value.trim() !== '') {
+                    sum += numValue;
+                    validCount++;
+                } else {
+                    invalidCount++;
+                }
+            });
+            
+            // Display results
+            document.getElementById('resultColumn').textContent = columnName;
+            document.getElementById('resultSum').textContent = sum.toLocaleString();
+            document.getElementById('resultValidCount').textContent = validCount;
+            document.getElementById('resultInvalidCount').textContent = invalidCount;
+            
+            results.classList.add('show');
+            
+            // Scroll to results
+            results.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Store data globally for future extensions
+        window.csvCalculator = {
+            data: () => csvData,
+            headers: () => csvHeaders,
+            addComparison: function(newData, newHeaders) {
+                // Future extension point for comparing multiple CSVs
+                console.log('Ready for comparison feature');
+            }
+        };
+    </script>
+</body>
+</html>
