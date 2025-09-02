@@ -1,0 +1,21 @@
+account_id,customer_name,balance,bad_debt_loss_reason,date_written_off,original_loan_amount
+ACC001,John Smith,2500.00,Bankruptcy,2024-01-15,15000.00
+ACC002,Sarah Johnson,1800.75,Job Loss,2024-01-20,8500.00
+ACC003,Michael Brown,3200.50,Medical Emergency,2024-02-05,12000.00
+ACC004,Emily Davis,950.25,Bankruptcy,2024-02-10,5000.00
+ACC005,David Wilson,4500.00,Business Closure,2024-02-15,20000.00
+ACC006,Lisa Anderson,1200.80,Job Loss,2024-02-28,6000.00
+ACC007,Robert Taylor,2800.45,Medical Emergency,2024-03-05,14000.00
+ACC008,Jennifer Moore,750.00,Bankruptcy,2024-03-10,4500.00
+ACC009,Christopher Lee,3600.90,Divorce,2024-03-15,18000.00
+ACC010,Amanda White,2200.60,Job Loss,2024-03-20,11000.00
+ACC011,James Harris,5200.25,Business Closure,2024-03-25,25000.00
+ACC012,Michelle Clark,1450.30,Medical Emergency,2024-04-01,7500.00
+ACC013,Daniel Lewis,900.75,Bankruptcy,2024-04-05,5500.00
+ACC014,Jessica Walker,3800.40,Divorce,2024-04-10,19000.00
+ACC015,Matthew Hall,1600.85,Job Loss,2024-04-15,8000.00
+ACC016,Ashley Young,2750.20,Medical Emergency,2024-04-20,13500.00
+ACC017,Joshua King,4100.60,Business Closure,2024-04-25,22000.00
+ACC018,Stephanie Wright,1100.45,Bankruptcy,2024-05-01,6500.00
+ACC019,Andrew Green,2950.80,Divorce,2024-05-05,15500.00
+ACC020,Nicole Adams,1850.15,Job Loss,2024-05-10,9000.00

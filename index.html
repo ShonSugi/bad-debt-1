@@ -235,6 +235,50 @@
             background: #f9fafb;
         }
 
+        .grouped-results {
+            margin-top: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+            border-radius: 12px;
+        }
+
+        .reason-group {
+            margin-bottom: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #10b981;
+        }
+
+        .reason-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .reason-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #065f46;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .reason-amount {
+            font-size: 1.1em;
+            color: #059669;
+            font-weight: bold;
+        }
+
+        .reason-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+
         .extension-note {
             margin-top: 30px;
             padding: 20px;
@@ -257,8 +301,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>CSV Column Sum Calculator</h1>
-            <p>Upload your CSV file and calculate column totals - designed for easy extension</p>
+            <h1>Bad Debt Analysis Tool</h1>
+            <p>Upload your CSV file to analyze bad debt losses grouped by reason</p>
         </div>
         
         <div class="main-content">
@@ -280,33 +324,41 @@
 
             <div class="column-selector" id="columnSelector">
                 <div class="form-group">
-                    <label for="columnSelect">Select Column to Sum:</label>
-                    <select id="columnSelect">
-                        <option value="">Choose a column...</option>
+                    <label for="balanceColumnSelect">Select Balance Column:</label>
+                    <select id="balanceColumnSelect">
+                        <option value="">Choose balance column...</option>
                     </select>
                 </div>
                 
-                <button class="calculate-button" id="calculateButton" disabled>Calculate Sum</button>
+                <div class="form-group">
+                    <label for="reasonColumnSelect">Select Bad Debt Loss Reason Column:</label>
+                    <select id="reasonColumnSelect">
+                        <option value="">Choose reason column...</option>
+                    </select>
+                </div>
+                
+                <button class="calculate-button" id="calculateButton" disabled>Analyze Bad Debt</button>
             </div>
 
             <div class="results" id="results">
-                <h3>Results</h3>
+                <h3>Bad Debt Analysis Results</h3>
                 <div class="result-item">
-                    <span class="result-label">Column:</span>
-                    <span class="result-value" id="resultColumn">-</span>
+                    <span class="result-label">Total Bad Debt:</span>
+                    <span class="result-value" id="totalBadDebt">-</span>
                 </div>
                 <div class="result-item">
-                    <span class="result-label">Sum:</span>
-                    <span class="result-value" id="resultSum">-</span>
+                    <span class="result-label">Number of Accounts:</span>
+                    <span class="result-value" id="totalAccounts">-</span>
                 </div>
                 <div class="result-item">
-                    <span class="result-label">Valid Numbers:</span>
-                    <span class="result-value" id="resultValidCount">-</span>
+                    <span class="result-label">Unique Reasons:</span>
+                    <span class="result-value" id="uniqueReasons">-</span>
                 </div>
-                <div class="result-item">
-                    <span class="result-label">Invalid/Empty Values:</span>
-                    <span class="result-value" id="resultInvalidCount">-</span>
-                </div>
+            </div>
+
+            <div class="grouped-results" id="groupedResults" style="display: none;">
+                <h3>Bad Debt by Reason</h3>
+                <div id="groupedResultsContent"></div>
             </div>
 
             <div class="csv-preview" id="csvPreview" style="display: none;">
@@ -317,8 +369,8 @@
             </div>
 
             <div class="extension-note">
-                <h3>🚀 Ready for Extension</h3>
-                <p>This tool is designed as a starting point for CSV comparisons. The code structure makes it easy to add features like multiple file uploads, column comparisons, data visualization, and statistical analysis.</p>
+                <h3>📊 Bad Debt Analysis Features</h3>
+                <p>This tool analyzes bad debt by grouping accounts by loss reason and summing balance amounts. Perfect for understanding patterns in debt losses and identifying the most significant categories affecting your portfolio.</p>
             </div>
         </div>
     </div>
@@ -332,9 +384,11 @@
         const csvSection = document.getElementById('csvSection');
         const fileInfo = document.getElementById('fileInfo');
         const columnSelector = document.getElementById('columnSelector');
-        const columnSelect = document.getElementById('columnSelect');
+        const balanceColumnSelect = document.getElementById('balanceColumnSelect');
+        const reasonColumnSelect = document.getElementById('reasonColumnSelect');
         const calculateButton = document.getElementById('calculateButton');
         const results = document.getElementById('results');
+        const groupedResults = document.getElementById('groupedResults');
         const csvPreview = document.getElementById('csvPreview');
 
         // Drag and drop functionality
@@ -398,12 +452,22 @@
         }
 
         function populateColumnSelect() {
-            columnSelect.innerHTML = '<option value="">Choose a column...</option>';
+            // Populate balance column select
+            balanceColumnSelect.innerHTML = '<option value="">Choose balance column...</option>';
+            reasonColumnSelect.innerHTML = '<option value="">Choose reason column...</option>';
+            
             csvHeaders.forEach((header, index) => {
-                const option = document.createElement('option');
-                option.value = index;
-                option.textContent = header;
-                columnSelect.appendChild(option);
+                // Balance column options
+                const balanceOption = document.createElement('option');
+                balanceOption.value = index;
+                balanceOption.textContent = header;
+                balanceColumnSelect.appendChild(balanceOption);
+                
+                // Reason column options
+                const reasonOption = document.createElement('option');
+                reasonOption.value = index;
+                reasonOption.textContent = header;
+                reasonColumnSelect.appendChild(reasonOption);
             });
         }
 
@@ -439,41 +503,98 @@
             csvPreview.style.display = 'block';
         }
 
-        columnSelect.addEventListener('change', () => {
-            calculateButton.disabled = columnSelect.value === '';
-        });
+        balanceColumnSelect.addEventListener('change', checkFormValid);
+        reasonColumnSelect.addEventListener('change', checkFormValid);
+        
+        function checkFormValid() {
+            calculateButton.disabled = balanceColumnSelect.value === '' || reasonColumnSelect.value === '';
+        }
 
         calculateButton.addEventListener('click', () => {
-            const columnIndex = parseInt(columnSelect.value);
-            const columnName = csvHeaders[columnIndex];
+            const balanceColumnIndex = parseInt(balanceColumnSelect.value);
+            const reasonColumnIndex = parseInt(reasonColumnSelect.value);
             
-            let sum = 0;
-            let validCount = 0;
-            let invalidCount = 0;
+            // Group data by bad debt loss reason
+            const groupedData = {};
+            let totalBadDebt = 0;
+            let totalAccounts = 0;
+            let validAccounts = 0;
             
             csvData.forEach(row => {
-                const value = row[columnIndex];
-                const numValue = parseFloat(value);
+                const balanceValue = row[balanceColumnIndex];
+                const reasonValue = row[reasonColumnIndex];
+                const numBalance = parseFloat(balanceValue);
                 
-                if (!isNaN(numValue) && value.trim() !== '') {
-                    sum += numValue;
-                    validCount++;
-                } else {
-                    invalidCount++;
+                if (!isNaN(numBalance) && balanceValue.trim() !== '' && reasonValue && reasonValue.trim() !== '') {
+                    const reason = reasonValue.trim();
+                    
+                    if (!groupedData[reason]) {
+                        groupedData[reason] = {
+                            totalAmount: 0,
+                            accountCount: 0,
+                            accounts: []
+                        };
+                    }
+                    
+                    groupedData[reason].totalAmount += numBalance;
+                    groupedData[reason].accountCount += 1;
+                    groupedData[reason].accounts.push({
+                        balance: numBalance,
+                        row: row
+                    });
+                    
+                    totalBadDebt += numBalance;
+                    validAccounts++;
                 }
+                totalAccounts++;
             });
             
-            // Display results
-            document.getElementById('resultColumn').textContent = columnName;
-            document.getElementById('resultSum').textContent = sum.toLocaleString();
-            document.getElementById('resultValidCount').textContent = validCount;
-            document.getElementById('resultInvalidCount').textContent = invalidCount;
+            // Display summary results
+            document.getElementById('totalBadDebt').textContent = '$' + totalBadDebt.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            document.getElementById('totalAccounts').textContent = validAccounts + ' of ' + totalAccounts;
+            document.getElementById('uniqueReasons').textContent = Object.keys(groupedData).length;
+            
+            // Display grouped results
+            displayGroupedResults(groupedData);
             
             results.classList.add('show');
+            groupedResults.style.display = 'block';
             
             // Scroll to results
             results.scrollIntoView({ behavior: 'smooth' });
         });
+        
+        function displayGroupedResults(groupedData) {
+            const container = document.getElementById('groupedResultsContent');
+            container.innerHTML = '';
+            
+            // Sort by total amount (descending)
+            const sortedReasons = Object.keys(groupedData).sort((a, b) => 
+                groupedData[b].totalAmount - groupedData[a].totalAmount
+            );
+            
+            sortedReasons.forEach(reason => {
+                const data = groupedData[reason];
+                const percentage = ((data.totalAmount / document.getElementById('totalBadDebt').textContent.replace(/[$,]/g, '')) * 100).toFixed(1);
+                
+                const reasonDiv = document.createElement('div');
+                reasonDiv.className = 'reason-group';
+                
+                reasonDiv.innerHTML = `
+                    <div class="reason-title">
+                        <span>${reason}</span>
+                        <span class="reason-amount">$${data.totalAmount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    </div>
+                    <div class="reason-details">
+                        <span>${data.accountCount} accounts</span>
+                        <span>${percentage}% of total bad debt</span>
+                        <span>Avg: $${(data.totalAmount / data.accountCount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                    </div>
+                `;
+                
+                container.appendChild(reasonDiv);
+            });
+        }
 
         // Store data globally for future extensions
         window.csvCalculator = {
